@@ -18,6 +18,7 @@ app.use(bodyParser());
 app.use(controller());
 
 spotify_chart.fetch_regions_periodic();
+// spotify_chart.fetch_charts_periodic();
 
 app.listen(3000);
 console.log('listening at port 3000...');

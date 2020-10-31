@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const {redis_client} = require("./redis/redis");
 
 const auth = async (code, refresh = true) => {
     // code can be the authorization code from web authorization, or a refresh token
@@ -19,15 +20,22 @@ const auth = async (code, refresh = true) => {
             })
         });
     console.log(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
-    return await response.json();
+    return {status: response.status, ...(await response.json())};
 }
 
-web_api = async (endpoint, refresh_token, method = 'GET', body) => {
+const web_api = async (endpoint, refresh_token, method = 'GET', body) => {
     // always refresh token before make a spotify web api request
     // in case that access token is expired
     const auth_data = await auth(refresh_token);
+    if (!auth_data)
+        return null;
     const access_token = auth_data['access_token'];
     const new_refresh_token = auth_data['refresh_token'];
+    if (new_refresh_token) {
+        // get corresponding user_id
+        const user_id = (await web_api('/me', new_refresh_token)).id;
+        await redis_client.hset('refresh_tokens', [user_id, new_refresh_token]);
+    }
 
     const spotify_api_uri = 'https://api.spotify.com/v1';
 
@@ -53,8 +61,8 @@ web_api = async (endpoint, refresh_token, method = 'GET', body) => {
                     body: JSON.stringify(body || '')
                 }
             );
-    console.log(`Spotify Web API: ${endpoint}, HTTP status: ${response.status}`)
-    return await response.json();
+    console.log(`Spotify Web API: ${endpoint}, method:${method}, HTTP status: ${response.status}`)
+    return {status: response.status, ...(await response.json())};
 }
 
 module.exports.auth = auth;

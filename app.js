@@ -6,6 +6,8 @@ const cors = require('@koa/cors');
 const controller = require('./controller');
 const spotify_chart = require('./spotify_chart');
 const {update_charts_for_all_users} = require('./controllers/charts')
+const https = require('https');
+const fs = require('fs');
 
 const app = new Koa();
 
@@ -28,5 +30,10 @@ const update_spotify_charts = async () => {
 
 update_spotify_charts();
 
-app.listen(3000);
+const options = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem')
+};
+
+https.createServer(options, app.callback()).listen(3000);
 console.log('listening at port 3000...');

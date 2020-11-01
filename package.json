@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "nodemonConfig": {
-    "ignore": ["test.js"],
+    "ignore": [
+      "test.js"
+    ],
     "delay": "2500"
   },
   "dependencies": {

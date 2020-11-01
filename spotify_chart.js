@@ -23,10 +23,10 @@ const fetch_regions = async () => {
     module.exports.regions = await redis_client.hgetall('regions');
 };
 
-const fetch_regions_periodic = () => {
-    fetch_regions();
+const fetch_regions_periodic = async () => {
     // update region list daily
     setTimeout(fetch_regions_periodic, 24 * 60 * 60 * 1000);
+    await fetch_regions();
 }
 
 const fetch_charts = async () => {
@@ -59,10 +59,10 @@ const fetch_charts = async () => {
     }
 }
 
-const fetch_charts_periodic = () => {
-    fetch_charts();
+const fetch_charts_periodic = async () => {
     // update charts every six hours
     setTimeout(fetch_charts_periodic, 6 * 60 * 60 * 1000);
+    await fetch_charts();
 }
 
 module.exports.fetch_regions_periodic = fetch_regions_periodic;

@@ -5,54 +5,85 @@ const get_region_list = async (ctx, next) => {
     ctx.response.body = await require('../spotify_chart').regions;
 }
 
-const create_user_charts = async (ctx, next) => {
-    const regions = await require('../spotify_chart').regions;
-    const user_id = ctx.request.body.user_id;
-    const regions_to_register = new Set(ctx.request.body.regions);
-    const key = `${user_id}:playlists`;
-    const registered_regions = new Set(await redis_client.hkeys(key));
-    for (const region_code of regions_to_register) {
-        if (!registered_regions.has(region_code)) {
-            // new region registration, create new playlist for this region
-            const playlist_id = (await spotify_api.web_api(
-                `/users/${user_id}/playlists`,
-                await redis_client.hget('refresh_tokens', user_id),
-                'POST',
-                {
-                    name: `${regions[region_code]} Top 200 Daily`,
-                    description: `Created and updated with ${process.env.REDIRECT_URL}`
-                }
-            )).id;
-            if (playlist_id) {
-                await redis_client.hset(`${user_id}:playlists`, [region_code, playlist_id]);
-                // add tracks to the newly created playlist
-                const tracks = await redis_client.lrange(`${region_code}:chart`, 0, -1);
-                // we can only add 100 tracks per request
-                if (tracks.length > 0)
-                    await spotify_api.web_api(
-                        `/playlists/${playlist_id}/tracks`,
-                        await redis_client.hget('refresh_tokens', user_id),
-                        'POST',
-                        {
-                            uris: tracks.slice(0, 100).map((uri) => `spotify:track:${uri}`)
-                        }
-                    );
-                if (tracks.length > 100)
-                    await spotify_api.web_api(
-                        `/playlists/${playlist_id}/tracks`,
-                        await redis_client.hget('refresh_tokens', user_id),
-                        'POST',
-                        {
-                            uris: tracks.slice(100, 200).map((uri) => `spotify:track:${uri}`)
-                        }
-                    );
+const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code) => {
+    const tracks = await redis_client.lrange(`${region_code}:chart`, 0, -1);
+    // we can only add 100 tracks per request
+    if (tracks.length > 0) {
+        await spotify_api.web_api(
+            `/playlists/${playlist_id}/tracks`,
+            user_id,
+            'PUT', // PUT method to replace all tracks in the playlist
+            {
+                uris: [] // use empty uris to clear playlist
             }
+        );
+        await spotify_api.web_api(
+            `/playlists/${playlist_id}/tracks`,
+            user_id,
+            'POST', // POST method to add tracks
+            {
+                uris: tracks.slice(0, 100).map((uri) => `spotify:track:${uri}`)
+            }
+        );
+    }
+    if (tracks.length > 100)
+        await spotify_api.web_api(
+            `/playlists/${playlist_id}/tracks`,
+            user_id,
+            'POST',
+            {
+                uris: tracks.slice(100, 200).map((uri) => `spotify:track:${uri}`)
+            }
+        );
+}
+
+const update_charts_for_all_users = async () => {
+    const user_playlists_key_list = await redis_client.keys('*[:playlists]?');
+    for (const key of user_playlists_key_list) {
+        const user_id = key.split(':')[0];
+        const playlists = await redis_client.hgetall(key);
+        for (const [region_code, playlist_id] of Object.entries(playlists)) {
+            // to avoid visiting spotify api too fast
+            // we wait 1 second between processing playlists
+            await new Promise(r => setTimeout(r, 1000));
+            await add_tracks_in_chart_to_playlist(playlist_id, user_id, region_code);
         }
     }
-    ctx.body = await redis_client.hgetall(key);
+}
+
+const register_charts = async (ctx, next) => {
+    const regions = await require('../spotify_chart').regions;
+    const user_id = ctx.request.body.user_id;
+    const regions_to_register = ctx.request.body.regions_to_register;
+    const key = `${user_id}:playlists`;
+    const registered_regions = await redis_client.hkeys(key);
+    // deregister regions that does not present in the request
+    for (const region_code of registered_regions.filter(x => !regions_to_register.includes(x)))
+        await redis_client.hdel(key, region_code);
+    // new region registration, create new playlist for this region
+    for (const region_code of regions_to_register.filter(x => !registered_regions.includes(x))) {
+        const playlist_id = (await spotify_api.web_api(
+            `/users/${user_id}/playlists`,
+            user_id,
+            'POST',
+            {
+                name: `${regions[region_code]} Top 200 Daily`,
+                description: `Created and updated with ${process.env.REDIRECT_URL}`
+            }
+        )).body.id;
+        if (playlist_id) {
+            // register in database
+            await redis_client.hset(`${user_id}:playlists`, [region_code, playlist_id]);
+            //we do not need 'await' for adding tracks, since it could be time consuming
+            add_tracks_in_chart_to_playlist(playlist_id, user_id, region_code);
+        }
+    }
+    ctx.body = {registered_regions: await redis_client.hkeys(key)};
 }
 
 module.exports = {
     '/charts/regions': {GET: get_region_list},
-    '/charts': {POST: create_user_charts}
+    '/charts': {POST: register_charts}
 };
+
+module.exports.update_charts_for_all_users = update_charts_for_all_users;

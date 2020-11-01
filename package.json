@@ -4,10 +4,14 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "redis-server ./redis/redis_scg.conf & node app.js"
+    "start": "redis-server ./redis/redis_scg.conf & nodemon app.js"
   },
   "author": "",
   "license": "ISC",
+  "nodemonConfig": {
+    "ignore": ["test.js"],
+    "delay": "2500"
+  },
   "dependencies": {
     "@babel/core": "^7.12.3",
     "@babel/plugin-transform-runtime": "^7.12.1",
@@ -20,6 +24,7 @@
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-logger": "^3.2.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "nodemon": "^2.0.6"
   }
 }

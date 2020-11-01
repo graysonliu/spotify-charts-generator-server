@@ -3,9 +3,14 @@ const fs = require('fs');
 
 function registerRoutes(router, controller) {
     for (const [path, mapping] of Object.entries(controller)) {
-        for (const [method, middleware] of Object.entries(mapping)) {
-            router.register(path, [method], middleware);
-        }
+        // path should start with '/', otherwise it is not a path
+        // this is to skip other possible exports
+        // like variables or functions
+        if (path.charAt(0) === '/')
+            for (const [method, middleware] of Object.entries(mapping)) {
+                router.register(path, [method], middleware);
+                console.log(`${method} ${path} added`);
+            }
     }
 }
 

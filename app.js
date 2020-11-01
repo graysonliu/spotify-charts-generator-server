@@ -30,10 +30,13 @@ const update_spotify_charts = async () => {
 
 update_spotify_charts();
 
-const options = {
-    key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem')
-};
+app.listen(3000);
 
-https.createServer(options, app.callback()).listen(3000);
+// for HTTPS
+// const options = {
+//     key: fs.readFileSync('key.pem'),
+//     cert: fs.readFileSync('cert.pem')
+// };
+//
+// https.createServer(options, app.callback()).listen(3000);
 console.log('listening at port 3000...');

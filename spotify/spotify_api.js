@@ -2,7 +2,6 @@ const fetch = require('node-fetch');
 const {redis_client} = require("../redis/redis");
 
 const auth = async (code, refresh = true) => {
-    console.log(`${refresh ? 'refresh token' : 'authorization code'}: ${code}`);
     // code can be the authorization code from web authorization, or a refresh token
     // if refresh is false, code is the authorization code rather than a refresh token
     const response = await fetch(

@@ -56,7 +56,7 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
 const update_charts_for_all_users = async () => {
     const user_playlists_key_list = await redis_client.keys('playlists:*');
     for (const key of user_playlists_key_list) {
-        const user_id = key.split(':')[0];
+        const user_id = key.split(':')[1];
         const playlists = await redis_client.hgetall(key);
         for (const [region_code, playlist_id] of Object.entries(playlists)) {
             // to avoid visiting spotify api too fast

@@ -21,10 +21,14 @@ const auth = async (code, refresh = true) => {
         });
     console.log(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
 
+    const body = await response.json();
+    if (!response.ok)
+        console.error(body);
+
     return {
         ok: response.ok,
         status: response.status,
-        body: await response.json()
+        body: body
     };
 }
 
@@ -48,12 +52,14 @@ const web_api_me = async (auth_info) => {
     if (response.ok) {
         await redis_client.set(`access_token:${body.id}`, access_token, 'EX', expires_in - 30);
         await redis_client.hset('refresh_tokens', [body.id, refresh_token]);
-    }
+    } else
+        console.error(body);
+
     return {ok: response.ok, status: response.status, body: body};
 }
 
 // the user must have a refresh_token in the database
-const web_api = async (endpoint, user_id, method = 'GET', body) => {
+const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
     // check if this user has a valid access_token in our database
     let access_token = await redis_client.get(`access_token:${user_id}`);
     // we need to refresh the access_token
@@ -91,20 +97,22 @@ const web_api = async (endpoint, user_id, method = 'GET', body) => {
                         Authorization: `Bearer ${access_token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(body || '')
+                    body: JSON.stringify(request_body || '')
                 }
             );
     console.log(`Spotify Web API: ${endpoint}, method:${method}, HTTP status: ${response.status}`)
 
-    let res_body = null;
+    let body = null;
     try {
-        res_body = await response.json();
+        body = await response.json();
     } catch (e) {
         console.log('No response body.')
     }
+    if (!response.ok)
+        console.error(body);
     return {
         ok: response.ok, status: response.status,
-        ...(res_body ? {body: res_body} : {})
+        ...(body ? {body: body} : {})
     };
 }
 

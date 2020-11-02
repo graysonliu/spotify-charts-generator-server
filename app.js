@@ -21,6 +21,8 @@ app.use(controller());
 const update_spotify_charts = async () => {
     await spotify_chart.fetch_regions_periodic();
     process.env.NODE_ENV === 'production' && await spotify_chart.fetch_charts_periodic();
+    // const {update_charts_for_all_users} = require('./controllers/charts')
+    // await update_charts_for_all_users();
 }
 
 update_spotify_charts();

@@ -95,7 +95,17 @@ const web_api = async (endpoint, user_id, method = 'GET', body) => {
                 }
             );
     console.log(`Spotify Web API: ${endpoint}, method:${method}, HTTP status: ${response.status}`)
-    return {ok: response.ok, status: response.status, body: await response.json()};
+
+    let res_body = null;
+    try {
+        res_body = await response.json();
+    } catch (e) {
+        console.log('No response body.')
+    }
+    return {
+        ok: response.ok, status: response.status,
+        ...(res_body ? {body: res_body} : {})
+    };
 }
 
 module.exports.auth = auth;

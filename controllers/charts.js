@@ -9,11 +9,11 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
     const tracks = await redis_client.lrange(`chart:${region_code}`, 0, -1);
     // change playlist's details, this also checks whether the playlist still exists
     const response = await spotify_api.web_api(
-        '/playlists/${playlist_id}',
+        `/playlists/${playlist_id}`,
         user_id,
         'PUT',
         {
-            description: `Last Update: ${new Date().toUTCString()} | Updated with http://zijian.xyz/spotify-charts-generator-app`
+            description: `Last Update: ${new Date().toUTCString()} | Updated with ${process.env.REDIRECT_URI}`
         }
     );
     if (!response.ok) {
@@ -54,7 +54,7 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
 }
 
 const update_charts_for_all_users = async () => {
-    const user_playlists_key_list = await redis_client.keys('*[:playlists]?');
+    const user_playlists_key_list = await redis_client.keys('*:playlists');
     for (const key of user_playlists_key_list) {
         const user_id = key.split(':')[0];
         const playlists = await redis_client.hgetall(key);

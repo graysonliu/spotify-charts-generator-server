@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const {redis_client} = require("./redis/redis");
+const {redis_client} = require("../redis/redis");
 
 const auth = async (code, refresh = true) => {
     // code can be the authorization code from web authorization, or a refresh token

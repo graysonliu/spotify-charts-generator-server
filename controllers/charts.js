@@ -1,14 +1,30 @@
 const {redis_client} = require('../redis/redis');
-const spotify_api = require('../spotify_api');
+const spotify_api = require('../spotify/spotify_api');
 
 const get_region_list = async (ctx, next) => {
-    ctx.response.body = await require('../spotify_chart').regions;
+    ctx.response.body = await require('../spotify/spotify_chart').regions;
 }
 
 const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code) => {
-    const tracks = await redis_client.lrange(`${region_code}:chart`, 0, -1);
+    const tracks = await redis_client.lrange(`chart:${region_code}`, 0, -1);
+    // change playlist's details, this also checks whether the playlist still exists
+    const response = await spotify_api.web_api(
+        '/playlists/${playlist_id}',
+        user_id,
+        'PUT',
+        {
+            description: `Last Update: ${new Date().toUTCString()} | Updated with http://zijian.xyz/spotify-charts-generator-app`
+        }
+    );
+    if (!response.ok) {
+        // this playlist might has been deleted by the user
+        // deregister it from database
+        await redis_client.hdel(`${user_id}:playlists`, region_code);
+        return;
+    }
     // we can only add 100 tracks per request
     if (tracks.length > 0) {
+        // clear the playlist first
         await spotify_api.web_api(
             `/playlists/${playlist_id}/tracks`,
             user_id,
@@ -52,7 +68,7 @@ const update_charts_for_all_users = async () => {
 }
 
 const register_charts = async (ctx, next) => {
-    const regions = await require('../spotify_chart').regions;
+    const regions = await require('../spotify/spotify_chart').regions;
     const user_id = ctx.request.body.user_id;
     const regions_to_register = ctx.request.body.regions_to_register;
     const key = `${user_id}:playlists`;

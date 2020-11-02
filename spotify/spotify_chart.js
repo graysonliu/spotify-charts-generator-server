@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
-const {redis_client} = require('./redis/redis');
+const {redis_client} = require('../redis/redis');
+const {update_charts_for_all_users} = require('../controllers/charts')
 
 const fetch_regions = async () => {
     const regions = [];
@@ -49,9 +50,9 @@ const fetch_charts = async () => {
             tracks.push(chart_page_query(this).attr('href').split('/').pop());
         });
 
-        await redis_client.del(`${region_code}:chart`);
+        await redis_client.del(`chart:${region_code}`);
         try {
-            await redis_client.rpush(`${region_code}:chart`, tracks);
+            await redis_client.rpush(`chart:${region_code}`, tracks);
         } catch (e) {
             console.log(`${new Date().toUTCString()}: Empty chart for ${region_name}`);
         }
@@ -63,6 +64,7 @@ const fetch_charts_periodic = async () => {
     // update charts every six hours
     setTimeout(fetch_charts_periodic, 6 * 60 * 60 * 1000);
     await fetch_charts();
+    await update_charts_for_all_users();
 }
 
 module.exports.fetch_regions_periodic = fetch_regions_periodic;

@@ -46,7 +46,7 @@ const web_api_me = async (auth_info) => {
     const body = await response.json();
 
     if (response.ok) {
-        await redis_client.set(`${body.id}:access_token`, access_token, 'EX', expires_in - 30);
+        await redis_client.set(`access_token:${body.id}`, access_token, 'EX', expires_in - 30);
         await redis_client.hset('refresh_tokens', [body.id, refresh_token]);
     }
     return {ok: response.ok, status: response.status, body: body};
@@ -55,14 +55,14 @@ const web_api_me = async (auth_info) => {
 // the user must have a refresh_token in the database
 const web_api = async (endpoint, user_id, method = 'GET', body) => {
     // check if this user has a valid access_token in our database
-    let access_token = await redis_client.get(`${user_id}:access_token`);
+    let access_token = await redis_client.get(`access_token:${user_id}`);
     // we need to refresh the access_token
     if (!access_token) {
         const auth_res = await auth(await redis_client.hget('refresh_tokens', user_id), true);
         if (auth_res.ok) {
             access_token = auth_res.body.access_token;
             const {refresh_token, expires_in} = auth_res.body;
-            await redis_client.set(`${user_id}:access_token`, access_token, 'EX', expires_in - 30);
+            await redis_client.set(`access_token:${user_id}`, access_token, 'EX', expires_in - 30);
             // update the refresh_token in the database if a new one is in the response
             if (refresh_token)
                 await redis_client.hset('refresh_tokens', [user_id, refresh_token]);

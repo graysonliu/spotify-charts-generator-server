@@ -19,7 +19,7 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
     if (!response.ok) {
         // this playlist might has been deleted by the user
         // deregister it from database
-        await redis_client.hdel(`${user_id}:playlists`, region_code);
+        await redis_client.hdel(`playlists:${user_id}`, region_code);
         return;
     }
     // we can only add 100 tracks per request
@@ -54,7 +54,7 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
 }
 
 const update_charts_for_all_users = async () => {
-    const user_playlists_key_list = await redis_client.keys('*:playlists');
+    const user_playlists_key_list = await redis_client.keys('playlists:*');
     for (const key of user_playlists_key_list) {
         const user_id = key.split(':')[0];
         const playlists = await redis_client.hgetall(key);
@@ -71,7 +71,7 @@ const register_charts = async (ctx, next) => {
     const regions = await require('../spotify/spotify_chart').regions;
     const user_id = ctx.request.body.user_id;
     const regions_to_register = ctx.request.body.regions_to_register;
-    const key = `${user_id}:playlists`;
+    const key = `playlists:${user_id}`;
     const registered_regions = await redis_client.hkeys(key);
     // deregister regions that does not present in the request
     for (const region_code of registered_regions.filter(x => !regions_to_register.includes(x)))
@@ -89,7 +89,7 @@ const register_charts = async (ctx, next) => {
         )).body.id;
         if (playlist_id) {
             // register in database
-            await redis_client.hset(`${user_id}:playlists`, [region_code, playlist_id]);
+            await redis_client.hset(`playlists:${user_id}`, [region_code, playlist_id]);
             //we do not need 'await' for adding tracks, since it could be time consuming
             add_tracks_in_chart_to_playlist(playlist_id, user_id, region_code);
         }

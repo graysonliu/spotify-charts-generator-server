@@ -37,14 +37,10 @@ update_spotify_charts();
 
 if (isProduction) {
     // SSL for HTTPS
-    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem', './letsencrypt/privkey.pem');
-    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem', './letsencrypt/cert.pem');
-    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/chain.pem', './letsencrypt/chain.pem');
-
     const options = {
-        key: fs.readFileSync('./letsencrypt/privkey.pem'),
-        cert: fs.readFileSync('./letsencrypt/cert.pem'),
-        ca: fs.readFileSync('./letsencrypt/chain.pem')
+        key: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
+        cert: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
+        ca: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem')
     };
 
     https.createServer(options, app.callback()).listen(3000);

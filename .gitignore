@@ -5,3 +5,4 @@ test.js
 *.rdb
 *.pem
 *.acl
+letsencrypt

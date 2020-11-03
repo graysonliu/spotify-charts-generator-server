@@ -26,25 +26,30 @@ app.use(controller());
 // app.use(static('./letsencrypt', {hidden: true})); // server static files
 // app.listen(80);
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const update_spotify_charts = async () => {
     await spotify_chart.fetch_regions_periodic();
-    process.env.NODE_ENV === 'production' && await spotify_chart.fetch_charts_periodic();
-    // const {update_charts_for_all_users} = require('./controllers/charts')
-    // await update_charts_for_all_users();
+    isProduction && await spotify_chart.fetch_charts_periodic();
 }
 
 update_spotify_charts();
 
-// SSL for HTTPS
-fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem', './letsencrypt/privkey.pem');
-fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem', './letsencrypt/cert.pem');
-fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/chain.pem', './letsencrypt/chain.pem');
+if (isProduction) {
+    // SSL for HTTPS
+    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem', './letsencrypt/privkey.pem');
+    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem', './letsencrypt/cert.pem');
+    fs.copyFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/chain.pem', './letsencrypt/chain.pem');
 
-const options = {
-    key: fs.readFileSync('./letsencrypt/privkey.pem'),
-    cert: fs.readFileSync('./letsencrypt/cert.pem'),
-    ca: fs.readFileSync('./letsencrypt/chain.pem')
-};
+    const options = {
+        key: fs.readFileSync('./letsencrypt/privkey.pem'),
+        cert: fs.readFileSync('./letsencrypt/cert.pem'),
+        ca: fs.readFileSync('./letsencrypt/chain.pem')
+    };
 
-https.createServer(options, app.callback()).listen(3000);
+    https.createServer(options, app.callback()).listen(3000);
+} else {
+    app.listen(3000);
+}
+
 console.log('listening at port 3000...');

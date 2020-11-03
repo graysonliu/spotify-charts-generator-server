@@ -39,8 +39,8 @@ if (isProduction) {
     // SSL for HTTPS
     const options = {
         key: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
-        cert: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
-        ca: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem')
+        cert: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem'),
+        ca: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/chain.pem')
     };
 
     https.createServer(options, app.callback()).listen(3000);

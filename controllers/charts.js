@@ -16,12 +16,12 @@ const add_tracks_in_chart_to_playlist = async (playlist_id, user_id, region_code
             description: `Last Update: ${new Date().toUTCString()} | Updated with ${process.env.REDIRECT_URI}`
         }
     );
-    if (!response.ok) {
-        // this playlist might has been deleted by the user
-        // deregister it from database
-        await redis_client.hdel(`playlists:${user_id}`, region_code);
-        return;
-    }
+    // if (!response.ok) {
+    //     // this playlist might has been deleted by the user
+    //     // deregister it from database
+    //     await redis_client.hdel(`playlists:${user_id}`, region_code);
+    //     return;
+    // }
     // we can only add 100 tracks per request
     if (tracks.length > 0) {
         // clear the playlist first

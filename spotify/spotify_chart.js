@@ -1,13 +1,14 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const {redis_client} = require('../redis/redis');
-const {update_charts_for_all_users} = require('../controllers/charts')
+const {update_charts_for_all_users} = require('../controllers/charts');
+const {logger} = require('../logs/logger');
 
 const fetch_regions = async () => {
     const regions = [];
     const response = await fetch('https://spotifycharts.com/');
     if (!response.ok) {
-        throw new Error("Cannot get region list.");
+        logger.error("Cannot get region list.");
     }
     const body = await response.text();
     const $ = cheerio.load(body);
@@ -18,7 +19,7 @@ const fetch_regions = async () => {
         regions.push(li.text()); // region name
     }
     await redis_client.hset('regions', regions);
-    console.log(`${new Date().toUTCString()}: Region list updated.`);
+    logger.info('Region list updated.');
 
     // in case that region list changed, it should be exported again
     module.exports.regions = await redis_client.hgetall('regions');
@@ -37,7 +38,7 @@ const fetch_charts = async () => {
         const chart_url = `https://spotifycharts.com/regional/${region_code}/daily/latest`;
         const chart_res = await fetch(chart_url);
         if (!chart_res.ok) {
-            console.log(`${new Date().toUTCString()}: Cannot get chart for ${region_code}`);
+            logger.error(`Cannot get chart for ${region_code}`);
             continue;
         }
 
@@ -54,9 +55,9 @@ const fetch_charts = async () => {
         try {
             await redis_client.rpush(`chart:${region_code}`, tracks);
         } catch (e) {
-            console.log(`${new Date().toUTCString()}: Empty chart for ${region_name}`);
+            logger.info(`Empty chart for ${region_name}`);
         }
-        console.log(`${new Date().toUTCString()}: Updated chart for ${region_name}`);
+        logger.info(`Updated chart for ${region_name}`);
     }
 }
 

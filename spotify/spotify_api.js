@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const {redis_client} = require("../redis/redis");
+const {logger} = require('../logs/logger')
 
 const auth = async (code, refresh = true) => {
     // code can be the authorization code from web authorization, or a refresh token
@@ -19,11 +20,11 @@ const auth = async (code, refresh = true) => {
                 ...(refresh ? {} : {redirect_uri: process.env.REDIRECT_URI})
             })
         });
-    console.log(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
+    logger.info(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
 
     const body = await response.json();
     if (!response.ok)
-        console.error(body);
+        logger.error(body);
 
     return {
         ok: response.ok,
@@ -45,7 +46,7 @@ const web_api_me = async (auth_info) => {
             }
         }
     );
-    console.log(`Spotify Web API Me: /me, HTTP status: ${response.status}`);
+    logger.info(`Spotify Web API Me: /me, HTTP status: ${response.status}`);
 
     const body = await response.json();
 
@@ -53,7 +54,7 @@ const web_api_me = async (auth_info) => {
         await redis_client.set(`access_token:${body.id}`, access_token, 'EX', expires_in - 30);
         await redis_client.hset('refresh_tokens', [body.id, refresh_token]);
     } else
-        console.error(body);
+        logger.error(body);
 
     return {ok: response.ok, status: response.status, body: body};
 }
@@ -100,16 +101,16 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
                     body: JSON.stringify(request_body || '')
                 }
             );
-    console.log(`Spotify Web API: ${endpoint}, method:${method}, HTTP status: ${response.status}`)
+    logger.info(`Spotify Web API: ${endpoint}, method:${method}, HTTP status: ${response.status}`)
 
     let body = null;
     try {
         body = await response.json();
     } catch (e) {
-        console.log('No response body.')
+        logger.info('No response body.');
     }
     if (!response.ok)
-        console.error(body);
+        logger.error(body);
     return {
         ok: response.ok, status: response.status,
         ...(body ? {body: body} : {})

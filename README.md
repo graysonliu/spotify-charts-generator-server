@@ -1,0 +1,3 @@
+# spotify-charts-generator-server
+
+[Spotify Charts Generator](https://graysonliu.github.io/spotify-charts-generator-app/) can help you create and periodically update Spotify playlists of daily Top 200 charts. This repository is its backend built with [Koa](https://koajs.com/) and [Redis](https://redis.io/). See its web frontend repository at [graysonliu/spotify-charts-generator-app](https://github.com/graysonliu/spotify-charts-generator-app/).

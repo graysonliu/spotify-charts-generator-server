@@ -34,6 +34,7 @@ const winston_logger = createLogger({
 
 module.exports.logger = winston_logger;
 
+fs.mkdirSync('./logs/koa_http_logs', {recursive: true});
 module.exports.koa_logger = koa_logger(({
     transporter: (str, args) => {
         !isProduction && console.log(str);

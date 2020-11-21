@@ -6,4 +6,5 @@ test.js
 *.pem
 *.acl
 letsencrypt
-*.log
+logs
+!logs/*.js

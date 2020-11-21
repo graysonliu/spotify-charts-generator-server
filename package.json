@@ -30,6 +30,7 @@
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.6",
     "strip-ansi": "^6.0.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.0"
   }
 }

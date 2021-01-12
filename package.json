@@ -10,9 +10,15 @@
   "license": "ISC",
   "nodemonConfig": {
     "ignore": [
+      ".git",
       "test.js"
     ],
-    "delay": "2500"
+    "delay": "2500",
+    "watch": [
+      ".",
+      "/etc/letsencrypt/live/spotify.zijian.xyz"
+    ],
+    "ext": "js, json, pem"
   },
   "dependencies": {
     "@babel/core": "^7.12.3",

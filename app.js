@@ -22,7 +22,7 @@ app.use(bodyParser());
 app.use(controller());
 
 // for certbot
-// app.use(static('./letsencrypt', {hidden: true})); // server static files
+// app.use(static('./letsencrypt', {hidden: true})); // serve static files
 // app.listen(80);
 
 const update_spotify_charts = async () => {

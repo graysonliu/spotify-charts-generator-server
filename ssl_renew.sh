@@ -1,6 +1,7 @@
+# only renew if the certificate will be due in 30 days
 certbot renew --standalone
 
-# renew ignoring whether it will be due in 30 days
+# ignore whether the certificate will be due in 30 days
 # certbot renew --standalone --force-renewal
 
 # renew monthly using cron

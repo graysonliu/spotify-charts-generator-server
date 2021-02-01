@@ -1,5 +1,5 @@
 const spotify_api = require('../spotify/spotify_api');
-const {redis_client} = require('../redis/redis');
+const {redis_client} = require('../redis-client');
 
 const get_user_info = async (ctx, next) => {
     const code = ctx.query.code;

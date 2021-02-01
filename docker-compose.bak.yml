@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+
+  app:
+    image: node:14-alpine
+    working_dir: /app
+    build: ./app
+    volumes:
+      - ./app:/app
+      - /etc/letsencrypt/live/spotify.zijian.xyz:/app/certificates
+    command: sh -c "npm install && npx nodemon ./app.js"
+    ports:
+      - 3000:3000
+    environment:
+      DOCKER: 1
+      CLIENT_ID: spotify-client-id
+      CLIENT_SECRET: spotify-client-secret
+      REDIRECT_URI_DEV: spotify-client-redirect-uri-in-development-mode
+      REDIRECT_URI_PRO: spotify-client-redirect-uri-in-production-mode
+      SCOPES: "playlist-modify-public playlist-modify-private"
+      NODE_ENV: development
+      REDIS_HOST: redis
+      REDIS_PORT: 7777
+      REDIS_USERNAME: redis-username
+      REDIS_PASSWORD: redis-password
+  
+  redis:
+    image: redis:alpine
+    working_dir: /redis
+    build: ./redis
+    volumes:
+      - ./redis/:/redis
+    command: sh -c "redis-server ./redis.conf"
+    ports:
+      - 7777:7777

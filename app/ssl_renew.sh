@@ -6,4 +6,4 @@ certbot renew --standalone
 
 # renew monthly using cron
 # crontab -e
-# 0 0 1 * * /root/ws/spotify-charts-generator-server/ssl_renew.sh
+# 0 0 1 * * ./root/ws/spotify-charts-generator-server/ssl_renew.sh

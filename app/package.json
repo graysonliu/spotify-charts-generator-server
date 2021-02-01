@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "redis-server ./redis/redis_scg.conf & nodemon app.js"
+    "start": "redis-server ./redis/redis.conf & nodemon ./app/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +17,14 @@
     "watch": [
       ".",
       "/etc/letsencrypt/live/spotify.zijian.xyz"
+    ],
+    "watchComments": [
+      "We moniter the directory that saves SSL certificates",
+      "to restart the server everytime the certificates are renewed.",
+      "The directory is /etc/letsencrypt/live/spotify.zijian.xyz",
+      "However, when integrating docker, we mount this directory to ./certificates (see docker-compose.yml),",
+      "which is in the current directory",
+      "therefore, we do not have to add that directory to the nodemon watch list explicitly"
     ],
     "ext": "js, json, pem"
   },

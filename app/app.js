@@ -1,4 +1,7 @@
-require('dotenv').config();
+process.env.DOCKER ? {} : require('dotenv').config();
+const isProduction = process.env.NODE_ENV === 'production';
+process.env.REDIRECT_URI = isProduction ? process.env.REDIRECT_URI_PRO : process.env.REDIRECT_URI_DEV;
+
 const Koa = require('koa');
 const bodyParser = require('koa-bodyparser');
 const cors = require('@koa/cors');
@@ -7,10 +10,9 @@ const static = require('koa-static');
 const https = require('https');
 const fs = require('fs');
 const spotify_chart = require('./spotify/spotify_chart');
-const {koa_logger} = require('./logs/logger')
+const { koa_logger } = require('./logger')
 
 const app = new Koa();
-const isProduction = process.env.NODE_ENV === 'production';
 
 // add koa logger
 app.use(koa_logger);

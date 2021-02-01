@@ -7,4 +7,5 @@ test.js
 *.acl
 letsencrypt
 logs
-!logs/*.js
+docker-compose.yml
+certificates

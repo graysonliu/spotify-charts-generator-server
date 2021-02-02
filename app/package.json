@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "redis-server ./redis/redis.conf & nodemon ./app/app.js"
+    "start": "nodemon ./app.js"
   },
   "author": "",
   "license": "ISC",

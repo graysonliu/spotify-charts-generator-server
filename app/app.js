@@ -1,7 +1,3 @@
-process.env.DOCKER ? {} : require('dotenv').config();
-const isProduction = process.env.NODE_ENV === 'production';
-process.env.REDIRECT_URI = isProduction ? process.env.REDIRECT_URI_PRO : process.env.REDIRECT_URI_DEV;
-
 const Koa = require('koa');
 const bodyParser = require('koa-bodyparser');
 const cors = require('@koa/cors');
@@ -11,8 +7,10 @@ const https = require('https');
 const fs = require('fs');
 const spotify_chart = require('./spotify/spotify_chart');
 const { koa_logger } = require('./logger')
+const { update_charts_for_all_users } = require('./controllers/charts');
 
 const app = new Koa();
+const isProduction = process.env.NODE_ENV === 'production';
 
 // add koa logger
 app.use(koa_logger);
@@ -29,7 +27,7 @@ app.use(controller());
 
 const update_spotify_charts = async () => {
     await spotify_chart.fetch_regions_periodic();
-    isProduction && await spotify_chart.fetch_charts_periodic();
+    isProduction ? await spotify_chart.fetch_charts_periodic() : await update_charts_for_all_users();
 }
 
 update_spotify_charts();

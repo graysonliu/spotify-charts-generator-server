@@ -13,18 +13,16 @@ services:
     ports:
       - 3000:3000
     environment:
-      DOCKER: 1
-      CLIENT_ID: spotify-client-id
-      CLIENT_SECRET: spotify-client-secret
-      REDIRECT_URI_DEV: spotify-client-redirect-uri-in-development-mode
-      REDIRECT_URI_PRO: spotify-client-redirect-uri-in-production-mode
-      SCOPES: "playlist-modify-public playlist-modify-private"
-      NODE_ENV: development
-      REDIS_HOST: redis
-      REDIS_PORT: 7777
-      REDIS_USERNAME: redis-username
-      REDIS_PASSWORD: redis-password
-  
+      - CLIENT_ID
+      - CLIENT_SECRET
+      - REDIRECT_URI
+      - SCOPES
+      - NODE_ENV
+      - REDIS_HOST
+      - REDIS_PORT
+      - REDIS_USERNAME
+      - REDIS_PASSWORD
+
   redis:
     image: redis:alpine
     working_dir: /redis

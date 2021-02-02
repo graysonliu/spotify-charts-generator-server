@@ -1,11 +1,12 @@
 .idea
 node_modules
-.env
+*.env
+!bak.env
 test.js
 *.rdb
 *.pem
 *.acl
 letsencrypt
 logs
-docker-compose.yml
+*.log
 certificates

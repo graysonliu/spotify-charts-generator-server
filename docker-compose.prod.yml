@@ -3,7 +3,7 @@ services:
   app:
     volumes:
       - /etc/letsencrypt:/app/certificates
-      - ./logs:/app/logs
+      - ./app/logs:/app/logs
     env_file:
       - ./env/redis.env
       - ./env/app-prod-docker-compose.env

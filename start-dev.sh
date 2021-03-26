@@ -1,5 +1,5 @@
 set -a # export environment variables for subprocess
-source ./env/local.env
+source ./env/dev.env
 set +a # disable
 exec > run.log # redirect output
 cd redis && redis-server ./redis.conf &

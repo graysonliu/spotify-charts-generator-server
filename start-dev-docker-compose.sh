@@ -1,5 +1,5 @@
 set -a # export environment variables for subprocess
-source ./env/local-docker-compose.env
+source ./env/dev-docker-compose.env
 set +a # disable
 
 # redirect output

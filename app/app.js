@@ -22,7 +22,7 @@ app.use(bodyParser());
 app.use(controller());
 
 // for certbot
-// app.use(static('./letsencrypt', {hidden: true})); // serve static files
+// app.use(static('./letsencrypt', {hidden: true})); // serve static files, including hidden files (name starts with a '.')
 // app.listen(80);
 
 const update_spotify_charts = async () => {
@@ -32,17 +32,13 @@ const update_spotify_charts = async () => {
 
 update_spotify_charts();
 
-if (isProduction) {
-    // SSL for HTTPS
-    const options = {
-        key: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
-        cert: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem'),
-        ca: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/chain.pem')
-    };
+// SSL for HTTPS
+const options = {
+    key: fs.readFileSync('./certificates/live/spotify.zijian.xyz/privkey.pem'),
+    cert: fs.readFileSync('./certificates/live/spotify.zijian.xyz/cert.pem')
+};
 
-    https.createServer(options, app.callback()).listen(3000);
-} else {
-    app.listen(3000);
-}
+https.createServer(options, app.callback()).listen(3000);
+
 
 console.log('listening at port 3000...');

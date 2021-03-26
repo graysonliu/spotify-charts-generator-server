@@ -3,12 +3,12 @@ version: "3.7"
 services:
 
   app:
-    image: node:14-alpine
+    image: zijianliu/node:spotify-charts-generator-server
     working_dir: /app
     build: ./app
     volumes:
       - ./app:/app
-      - /etc/letsencrypt/live/spotify.zijian.xyz:/app/certificates
+      - /etc/letsencrypt:/app/certificates
     command: sh -c "npm install && npx nodemon ./app.js"
     ports:
       - 3000:3000
@@ -24,7 +24,7 @@ services:
       - REDIS_PASSWORD
 
   redis:
-    image: redis:alpine
+    image: zijianliu/redis:spotify-charts-generator-server
     working_dir: /redis
     build: ./redis
     volumes:

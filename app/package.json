@@ -15,8 +15,7 @@
     ],
     "delay": "2500",
     "watch": [
-      ".",
-      "/etc/letsencrypt/live/spotify.zijian.xyz"
+      "."
     ],
     "watchComments": [
       "We moniter the directory that saves SSL certificates",

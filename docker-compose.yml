@@ -1,34 +1,26 @@
-version: "3.7"
+version: "3.8"
 
 services:
 
   app:
     image: zijianliu/node:spotify-charts-generator-server
-    working_dir: /app
     build: ./app
     volumes:
       - ./app:/app
       - /etc/letsencrypt:/app/certificates
-    command: sh -c "npm install && npx nodemon ./app.js"
+      - /app/node_modules
     ports:
       - 3000:3000
-    environment:
-      - CLIENT_ID
-      - CLIENT_SECRET
-      - REDIRECT_URI
-      - SCOPES
-      - NODE_ENV
-      - REDIS_HOST
-      - REDIS_PORT
-      - REDIS_USERNAME
-      - REDIS_PASSWORD
+    depends_on: 
+      - redis
+    env_file:
+      - ./env/redis.env
+      - ./env/app-dev-docker-compose.env
 
   redis:
     image: zijianliu/redis:spotify-charts-generator-server
-    working_dir: /redis
     build: ./redis
     volumes:
-      - ./redis/:/redis
-    command: sh -c "redis-server ./redis.conf"
+      - ./redis:/redis
     ports:
       - 7777:7777

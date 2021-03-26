@@ -6,8 +6,6 @@ const redis_client = new Redis({
     password: process.env.REDIS_PASSWORD
 });
 
-console.error(process.env.REDIS_USERNAME)
-
 redis_client.on("error", function (error) {
     console.error(error);
 });

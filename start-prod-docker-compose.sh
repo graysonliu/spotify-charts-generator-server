@@ -1,6 +1,6 @@
-set -a # export environment variables for subprocess
-source ./env/prod-docker-compose.env
-set +a # disable
+# remove if the directory already exists 
+rm -rf ./app/certificates
+rm -rf ./app/node_modules
 
 # run containers
-docker-compose up
+docker-compose -f docker-compose.yml -f docker-compsose.prod.yml up

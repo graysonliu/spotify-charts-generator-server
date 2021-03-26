@@ -1,8 +1,8 @@
-set -a # export environment variables for subprocess
-source ./env/dev-docker-compose.env
-set +a # disable
+# remove if the directory already exists 
+rm -rf ./app/certificates
+rm -rf ./app/node_modules
 
 # redirect output
-exec > run.log
+# exec > run.log
 # run containers
-docker-compose up --no-color
+docker-compose up --no-color > run.log &

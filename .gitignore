@@ -1,7 +1,7 @@
 .idea
 node_modules
 *.env
-!bak.env
+!*bak.env
 test.js
 *.rdb
 *.pem

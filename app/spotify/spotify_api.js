@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
-const {redis_client} = require("../redis/redis");
-const {logger} = require('../logs/logger')
+const {redis_client} = require("../redis-client");
+const {logger} = require('../logger')
 
 const auth = async (code, refresh = true) => {
     // code can be the authorization code from web authorization, or a refresh token

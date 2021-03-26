@@ -1,4 +1,4 @@
-const {redis_client} = require('../redis/redis');
+const {redis_client} = require('../redis-client');
 const spotify_api = require('../spotify/spotify_api');
 
 const get_region_list = async (ctx, next) => {

@@ -7,5 +7,5 @@ const get_app_info = async (ctx, next) => {
 }
 
 module.exports = {
-    '/app-info': {GET: get_app_info}
+    '/app-info': { GET: get_app_info }
 };

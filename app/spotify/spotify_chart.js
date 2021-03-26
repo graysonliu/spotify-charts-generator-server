@@ -1,8 +1,8 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
-const {redis_client} = require('../redis/redis');
+const {redis_client} = require('../redis-client');
 const {update_charts_for_all_users} = require('../controllers/charts');
-const {logger} = require('../logs/logger');
+const {logger} = require('../logger');
 
 const fetch_regions = async () => {
     const regions = [];

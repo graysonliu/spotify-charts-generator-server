@@ -2,6 +2,7 @@
 node_modules
 *.env
 !*bak.env
+!*base.env
 test.js
 *.rdb
 *.pem

@@ -2,7 +2,5 @@
 rm -rf ./app/certificates
 rm -rf ./app/node_modules
 
-# redirect output
-# exec > run.log
 # run containers
-docker-compose up --no-color > run.log &
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --no-color --build > run.log &

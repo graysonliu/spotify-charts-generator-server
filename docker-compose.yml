@@ -1,21 +1,15 @@
 version: "3.8"
 
 services:
-
   app:
     image: zijianliu/node:spotify-charts-generator-server
     build: ./app
-    volumes:
-      - ./app:/app
-      - /etc/letsencrypt:/app/certificates
-      - /app/node_modules
     ports:
       - 3000:3000
-    depends_on: 
+    depends_on:
       - redis
     env_file:
       - ./env/redis.env
-      - ./env/app-dev-docker-compose.env
 
   redis:
     image: zijianliu/redis:spotify-charts-generator-server

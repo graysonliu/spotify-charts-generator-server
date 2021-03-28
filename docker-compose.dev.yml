@@ -3,7 +3,5 @@ services:
   app:
     volumes:
       - ./app:/app
-      - /etc/letsencrypt:/app/certificates
-      - /app/node_modules
     env_file:
       - ./env/app-dev-docker-compose.env

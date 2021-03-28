@@ -21,7 +21,7 @@ const get_user_info = async (ctx, next) => {
         user_id: id,
         registered_regions: await redis_client.hkeys(`playlists:${id}`)
     };
-}
+};
 
 module.exports = {
     '/users': {GET: get_user_info}

@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const { redis_client } = require("../redis-client");
-const { logger } = require('../logger')
+const { logger } = require('../logger');
 
 const auth = async (code, refresh = true, user_id = null) => {
     // code can be the authorization code from web authorization, or a refresh token
@@ -35,7 +35,7 @@ const auth = async (code, refresh = true, user_id = null) => {
         status: response.status,
         body: body
     };
-}
+};
 
 // this is to get user_id using access_token
 // only using this function when user is in the authorization process
@@ -61,7 +61,7 @@ const web_api_me = async (auth_info) => {
         logger.error(`Failed to get user information -> response: ${JSON.stringify(body)}`);
 
     return { ok: response.ok, status: response.status, body: body };
-}
+};
 
 // the user must have a refresh_token in the database
 const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
@@ -69,7 +69,7 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
     let access_token = await redis_client.get(`access_token:${user_id}`);
     // we need to refresh the access_token
     if (!access_token) {
-        const auth_res = await auth(await redis_client.hget('refresh_tokens', user_id), refresh = true, user_id = user_id);
+        const auth_res = await auth(await redis_client.hget('refresh_tokens', user_id), true, user_id);
         if (auth_res.ok) {
             access_token = auth_res.body.access_token;
             const { refresh_token, expires_in } = auth_res.body;
@@ -105,7 +105,7 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
                     body: JSON.stringify(request_body || '')
                 }
             );
-    logger.info(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}`)
+    logger.info(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}`);
 
     let body = null;
     try {
@@ -119,7 +119,7 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
         ok: response.ok, status: response.status,
         ...(body ? { body: body } : {})
     };
-}
+};
 
 module.exports.auth = auth;
 module.exports.web_api = web_api;

@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const formatDate = (date) => {
     // YYYY-MM-DD
     return `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}`;
-}
+};
 
 const winston_logger = createLogger({
     level: 'info',
@@ -32,7 +32,7 @@ const winston_logger = createLogger({
     ]
 });
 
-module.exports.logger = winston_logger;
+module.exports.winston_logger = winston_logger;
 
 fs.mkdirSync('./logs/koa_http_logs', {recursive: true});
 module.exports.koa_logger = koa_logger(({

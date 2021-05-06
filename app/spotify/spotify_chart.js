@@ -1,13 +1,16 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const { redis_client } = require('../redis-client');
-const { logger } = require('../logger');
+const { winston_logger } = require('../logger');
 
 const fetch_charts_metadata = async () => {
     try {
-        const response = await fetch('https://spotifycharts.com');
+        const response = await fetch('https://spotifycharts.com',
+            {
+                headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' }
+            });
         if (!response.ok) {
-            throw (`HTTP Code: ${response.status}`);
+            throw (`Failure when fetching metadata form spotifycharts.com, HTTP Code: ${response.status}`);
         }
         const body = await response.text();
         const $ = cheerio.load(body);
@@ -57,7 +60,7 @@ const fetch_charts_metadata = async () => {
         await redis_client.del('regions');
         await redis_client.hset('regions', regions);
 
-        logger.info('Charts metadata updated.');
+        winston_logger.info('Charts metadata updated.');
 
         // in case that charts metadata changed, we should export these information again
         module.exports.regions = await redis_client.hgetall('regions');
@@ -65,7 +68,7 @@ const fetch_charts_metadata = async () => {
     }
     catch (e) {
         console.error(e);
-        logger.error("Cannot update charts metadata.");
+        winston_logger.error("Cannot update charts metadata.");
     }
 };
 
@@ -85,7 +88,7 @@ const fetch_chart = async (chart_key) => {
     const tracks = [];
     const chart_res = await fetch(chart_url);
     if (!chart_res.ok) {
-        logger.error(`Cannot get chart for ${chart_key}`);
+        winston_logger.error(`Cannot get chart for ${chart_key}`);
         return tracks;
     }
 
@@ -108,13 +111,13 @@ const fetch_chart = async (chart_key) => {
         else if (chart_recurrence === 'weekly')
             await redis_client.expire(`chart:${chart_key}`, 12 * 60 * 60);
     } catch (e) {
-        logger.info(`Empty chart for ${chart_key}`);
+        winston_logger.info(`Empty chart for ${chart_key}`);
     }
-    logger.info(`Updated chart for ${chart_key}`);
+    winston_logger.info(`Updated chart for ${chart_key}`);
     return await redis_client.lrange(`chart:${chart_key}`, 0, -1);
 };
 
 module.exports.fetch_charts_metadata_periodic = fetch_charts_metadata_periodic;
 module.exports.fetch_chart = fetch_chart;
 module.exports.regions = (async () => (await redis_client.hgetall('regions')))();
-module.exports.charts_options = (async () => (await redis_client.hgetall('charts_options')))();
+module.exports.chart_options = (async () => (await redis_client.hgetall('chart_options')))();

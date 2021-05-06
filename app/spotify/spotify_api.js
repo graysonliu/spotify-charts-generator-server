@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const { redis_client } = require("../redis-client");
-const { logger } = require('../logger');
+const { winston_logger } = require('../logger');
 
 const auth = async (code, refresh = true, user_id = null) => {
     // code can be the authorization code from web authorization, or a refresh token
@@ -20,14 +20,14 @@ const auth = async (code, refresh = true, user_id = null) => {
                 ...(refresh ? {} : { redirect_uri: process.env.REDIRECT_URI })
             })
         });
-    logger.info(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
+    winston_logger.info(`Spotify Auth: /api/token, refresh: ${refresh}, HTTP status: ${response.status}`);
 
     const body = await response.json();
     if (!response.ok) {
         if (!refresh)
-            logger.error(`Failed to get refresh_token using authorization code -> response: ${JSON.stringify(body)}`);
+            winston_logger.error(`Failed to get refresh_token using authorization code -> response: ${JSON.stringify(body)}`);
         else
-            logger.error(`Failed to refresh refresh_token for user ${user_id} -> response: ${JSON.stringify(body)}`);
+            winston_logger.error(`Failed to refresh refresh_token for user ${user_id} -> response: ${JSON.stringify(body)}`);
     }
 
     return {
@@ -50,7 +50,7 @@ const web_api_me = async (auth_info) => {
             }
         }
     );
-    logger.info(`Spotify Web API Me: /me, HTTP status: ${response.status}`);
+    winston_logger.info(`Spotify Web API Me: /me, HTTP status: ${response.status}`);
 
     const body = await response.json();
 
@@ -58,7 +58,7 @@ const web_api_me = async (auth_info) => {
         await redis_client.set(`access_token:${body.id}`, access_token, 'EX', expires_in - 30);
         await redis_client.hset('refresh_tokens', [body.id, refresh_token]);
     } else
-        logger.error(`Failed to get user information -> response: ${JSON.stringify(body)}`);
+        winston_logger.error(`Failed to get user information -> response: ${JSON.stringify(body)}`);
 
     return { ok: response.ok, status: response.status, body: body };
 };
@@ -105,16 +105,16 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
                     body: JSON.stringify(request_body || '')
                 }
             );
-    logger.info(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}`);
+    winston_logger.info(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}`);
 
     let body = null;
     try {
         body = await response.json();
     } catch (e) {
-        logger.info(`No response body.`);
+        winston_logger.info(`No response body.`);
     }
     if (!response.ok)
-        logger.error(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}, response: ${JSON.stringify(body)}`);
+        winston_logger.error(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}, response: ${JSON.stringify(body)}`);
     return {
         ok: response.ok, status: response.status,
         ...(body ? { body: body } : {})

@@ -4,4 +4,5 @@ services:
     volumes:
       - ./app:/app
     env_file:
-      - ./env/app-dev-docker-compose.env
+      - ./env/app-docker-compose-dev.env
+      - ./env/app-base.env

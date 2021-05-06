@@ -3,4 +3,5 @@ services:
     volumes:
       - ./app/logs:/app/logs
     env_file:
-      - ./env/app-prod-docker-compose.env
+      - ./env/app-docker-compose-prod.env
+      - ./env/app-base.env

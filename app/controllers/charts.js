@@ -6,6 +6,10 @@ const get_region_list = async (ctx, next) => {
     ctx.response.body = await require('../spotify/spotify_chart').regions;
 };
 
+const get_option_list = async (ctx, next) => {
+    ctx.response.body = await require('../spotify/spotify_chart').chart_options;
+};
+
 const update_playlists_for_all_users = async () => {
     const user_playlists_key_list = await redis_client.keys('playlists:*');
     for (const key of user_playlists_key_list) {
@@ -100,7 +104,8 @@ const register_charts = async (ctx, next) => {
 
 module.exports = {
     '/charts/regions': { GET: get_region_list },
-    '/charts': { POST: register_charts }
+    '/charts': { POST: register_charts },
+    '/charts/options': { GET: get_option_list }
 };
 
 module.exports.update_playlists_for_all_users = update_playlists_for_all_users;

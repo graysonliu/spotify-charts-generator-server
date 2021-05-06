@@ -3,12 +3,17 @@ const cheerio = require('cheerio');
 const { redis_client } = require('../redis-client');
 const { winston_logger } = require('../logger');
 
+const fetch_from_spotifycharts = async (path) => {
+    const url = 'https://spotifycharts.com';
+    return await fetch(`${url}${path}`,
+        {
+            headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' }
+        });
+};
+
 const fetch_charts_metadata = async () => {
     try {
-        const response = await fetch('https://spotifycharts.com',
-            {
-                headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' }
-            });
+        const response = await fetch_from_spotifycharts('/');
         if (!response.ok) {
             throw (`Failure when fetching metadata form spotifycharts.com, HTTP Code: ${response.status}`);
         }
@@ -84,9 +89,9 @@ const fetch_chart = async (chart_key) => {
     }
 
     const [region_code, chart_type, chart_recurrence] = chart_key.split('-', 3);
-    const chart_url = `https://spotifycharts.com/${chart_type}/${region_code}/${chart_recurrence}`;
+    const chart_path = `/${chart_type}/${region_code}/${chart_recurrence}`;
     const tracks = [];
-    const chart_res = await fetch(chart_url);
+    const chart_res = await fetch_from_spotifycharts(chart_path);
     if (!chart_res.ok) {
         winston_logger.error(`Cannot get chart for ${chart_key}`);
         return tracks;

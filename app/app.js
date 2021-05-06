@@ -5,9 +5,9 @@ const controller = require('./controller');
 const static = require('koa-static');
 const https = require('https');
 const fs = require('fs');
-const spotify_chart = require('./spotify/spotify_chart');
-const { koa_logger } = require('./logger')
-const { update_charts_for_all_users } = require('./controllers/charts');
+const { koa_logger } = require('./logger');
+const { update_playlists_for_all_users } = require('./controllers/charts');
+const { fetch_charts_metadata_periodic } = require('./spotify/spotify_chart');
 
 const app = new Koa();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -25,18 +25,36 @@ app.use(controller());
 // app.use(static('./letsencrypt', {hidden: true})); // serve static files, including hidden files (name starts with a '.')
 // app.listen(80);
 
-const update_spotify_charts = async () => {
-    await spotify_chart.fetch_regions_periodic();
-    isProduction ? await spotify_chart.fetch_charts_periodic() : await update_charts_for_all_users();
-}
+const update_playlists_for_all_users_periodic = async () => {
+    setTimeout(update_playlists_for_all_users_periodic, 6 * 60 * 60 * 1000);
+    await update_playlists_for_all_users();
+};
 
-update_spotify_charts();
+const init_tasks = async () => {
+    // get charts metadata first
+    await fetch_charts_metadata_periodic();
+    update_playlists_for_all_users_periodic();
+};
+
+init_tasks();
+
+let options = {};
 
 // SSL for HTTPS
-const options = {
-    key: fs.readFileSync('./certificates/live/spotify.zijian.xyz/privkey.pem'),
-    cert: fs.readFileSync('./certificates/live/spotify.zijian.xyz/cert.pem')
-};
+try {
+    // when running in the container, SSL certificates is in local directory
+    options = {
+        key: fs.readFileSync('./certificates/live/spotify.zijian.xyz/privkey.pem'),
+        cert: fs.readFileSync('./certificates/live/spotify.zijian.xyz/cert.pem')
+    };
+}
+catch {
+    // outside of the container
+    options = {
+        key: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/privkey.pem'),
+        cert: fs.readFileSync('/etc/letsencrypt/live/spotify.zijian.xyz/cert.pem')
+    };
+}
 
 https.createServer(options, app.callback()).listen(3000);
 

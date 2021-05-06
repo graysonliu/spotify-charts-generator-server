@@ -4,6 +4,8 @@ services:
   app:
     image: zijianliu/node:spotify-charts-generator-server
     build: ./app
+    volumes:
+      - /etc/letsencrypt:/app/certificates
     ports:
       - 3000:3000
     depends_on:

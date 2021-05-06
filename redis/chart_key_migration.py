@@ -27,6 +27,6 @@ user_playlists_keys = r.keys('playlists:*')
 
 for key in user_playlists_keys:
     for chart_key, playlist_id in r.hgetall(key).items():
-        if len(chart_key) == 2:  # old chart key
+        if not b'-' in chart_key:  # old chart key
             r.hdel(key, chart_key)
             r.hset(key, chart_key + b'-regional-daily', playlist_id)

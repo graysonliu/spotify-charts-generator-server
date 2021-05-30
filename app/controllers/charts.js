@@ -3,11 +3,11 @@ const spotify_api = require('../spotify/spotify_api');
 const { fetch_chart } = require('../spotify/spotify_chart');
 
 const get_region_list = async (ctx, next) => {
-    ctx.response.body = await require('../spotify/spotify_chart').regions;
+    ctx.response.body = await redis_client.hgetall('regions');
 };
 
 const get_option_list = async (ctx, next) => {
-    ctx.response.body = await require('../spotify/spotify_chart').chart_options;
+    ctx.response.body = await redis_client.hgetall('chart_options');
 };
 
 const update_playlists_for_all_users = async () => {
@@ -15,17 +15,17 @@ const update_playlists_for_all_users = async () => {
     for (const key of user_playlists_key_list) {
         const user_id = key.split(':')[1];
         const playlists = await redis_client.hgetall(key);
-        for (const [chart_key, playlist_id] of Object.entries(playlists)) {
+        for (const [chart_code, playlist_id] of Object.entries(playlists)) {
             // to avoid visiting spotify api too fast
             // we wait 1 second between processing playlists
             await new Promise(r => setTimeout(r, 1000));
-            await update_playlist(playlist_id, user_id, chart_key);
+            await update_playlist(playlist_id, user_id, chart_code);
         }
     }
 };
 
-const update_playlist = async (playlist_id, user_id, chart_key) => {
-    const tracks = await fetch_chart(chart_key);
+const update_playlist = async (playlist_id, user_id, chart_code) => {
+    const tracks = await fetch_chart(chart_code);
     // change playlist's details, this also checks whether the playlist still exists
     const response = await spotify_api.web_api(
         `/playlists/${playlist_id}`,
@@ -72,34 +72,54 @@ const update_playlist = async (playlist_id, user_id, chart_key) => {
         );
 };
 
+const create_playlist = async (user_id, chart_code) => {
+    const regions = await redis_client.hgetall('regions');
+    const options = await redis_client.hgetall('chart_options');
+    const i = chart_code.indexOf('-');
+    const region_code = chart_code.slice(0, i);
+    const option_code = chart_code.slice(i + 1);
+    const playlist_id = (await spotify_api.web_api(
+        `/users/${user_id}/playlists`,
+        user_id,
+        'POST',
+        {
+            name: `${regions[region_code]} ${options[option_code]}`,
+            description: `Created and updated with ${process.env.REDIRECT_URL}`
+        }
+    )).body.id;
+
+    return playlist_id;
+};
+
+const delete_playlist = async (user_id, playlist_id) => {
+    return await spotify_api.web_api(`/playlists/${playlist_id}/followers`, user_id, 'DELETE');
+};
+
 const register_charts = async (ctx, next) => {
-    const regions = await require('../spotify/spotify_chart').regions;
+    const regions = await redis_client.hgetall('regions');
     const user_id = ctx.request.body.user_id;
-    const regions_to_register = ctx.request.body.regions_to_register;
+    const charts_to_register = ctx.request.body.charts_to_register;
     const key = `playlists:${user_id}`;
-    const registered_regions = await redis_client.hkeys(key);
+    const registered_charts = await redis_client.hkeys(key);
     // deregister regions that does not present in the request
-    for (const region_code of registered_regions.filter(x => !regions_to_register.includes(x)))
-        await redis_client.hdel(key, region_code);
-    // new region registration, create new playlist for this region
-    for (const region_code of regions_to_register.filter(x => !registered_regions.includes(x))) {
-        const playlist_id = (await spotify_api.web_api(
-            `/users/${user_id}/playlists`,
-            user_id,
-            'POST',
-            {
-                name: `${regions[region_code]} Top 200 Daily`,
-                description: `Created and updated with ${process.env.REDIRECT_URL}`
-            }
-        )).body.id;
-        if (playlist_id) {
-            // register in database
-            await redis_client.hset(`playlists:${user_id}`, [region_code, playlist_id]);
-            //we do not need 'await' for adding tracks, since it could be time consuming
-            update_playlist(playlist_id, user_id, region_code);
+    for (const chart_code of registered_charts.filter(x => !charts_to_register.includes(x))) {
+        const playlist_id = await redis_client.hget(key, chart_code);
+        const res = await delete_playlist(user_id, playlist_id);
+        if (res.ok) {
+            await redis_client.hdel(key, chart_code);
         }
     }
-    ctx.body = { registered_regions: await redis_client.hkeys(key) };
+    // new region registration, create new playlist for this region
+    for (const chart_code of charts_to_register.filter(x => !registered_charts.includes(x))) {
+        const playlist_id = await create_playlist(user_id, chart_code);
+        if (playlist_id) {
+            // register in database
+            await redis_client.hset(`playlists:${user_id}`, [chart_code, playlist_id]);
+            //we do not need 'await' for adding tracks, since it could be time consuming
+            update_playlist(playlist_id, user_id, chart_code);
+        }
+    }
+    ctx.body = { registered_charts: await redis_client.hkeys(key) };
 };
 
 module.exports = {

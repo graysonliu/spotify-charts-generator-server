@@ -84,7 +84,7 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
     const spotify_api_uri = 'https://api.spotify.com/v1';
 
     const response =
-        method.toUpperCase() === 'GET' ?
+        method.toUpperCase() === 'GET' || method.toUpperCase() === 'DELETE' ?
             await fetch(
                 spotify_api_uri + endpoint,
                 {

@@ -66,10 +66,6 @@ const fetch_charts_metadata = async () => {
         await redis_client.hset('regions', regions);
 
         winston_logger.info('Charts metadata updated.');
-
-        // in case that charts metadata changed, we should export these information again
-        module.exports.regions = await redis_client.hgetall('regions');
-        module.exports.charts_options = await redis_client.hgetall('charts_options');
     }
     catch (e) {
         console.error(e);
@@ -83,46 +79,69 @@ const fetch_charts_metadata_periodic = async () => {
     await fetch_charts_metadata();
 };
 
-const fetch_chart = async (chart_key) => {
-    if (await redis_client.exists(`chart:${chart_key}`)) {
-        return await redis_client.lrange(`chart:${chart_key}`, 0, -1);
+const fetch_chart = async (chart_code) => {
+    if (await redis_client.exists(`chart:${chart_code}`)) {
+        return await redis_client.lrange(`chart:${chart_code}`, 0, -1);
     }
 
-    const [region_code, chart_type, chart_recurrence] = chart_key.split('-', 3);
-    const chart_path = `/${chart_type}/${region_code}/${chart_recurrence}`;
-    const tracks = [];
+    const [region_code, type_code, chart_recurrence] = chart_code.split('-', 3);
+    const chart_path = `/${type_code}/${region_code}/${chart_recurrence}`;
     const chart_res = await fetch_from_spotifycharts(chart_path);
     if (!chart_res.ok) {
-        winston_logger.error(`Cannot get chart for ${chart_key}`);
-        return tracks;
+        winston_logger.error(`Cannot get chart for ${chart_code}`);
+        return [];
     }
+
+    const tracks_full = [];
+    const tracks_new = [];
 
     const chart_page = await chart_res.text();
     const $ = cheerio.load(chart_page);
-    const tracks_html_list = $('.chart-table-image a');
-    tracks_html_list.each(function (i, element) {
-        // do not use arrow function here
-        // pay attention to 'this' when using arrow function
-        tracks.push($(this).attr('href').split('/').pop());
+    const tracks_html_list = $('.chart-table tbody tr');
+    tracks_html_list.each((i, element) => {
+        const track_id = $(element).find('.chart-table-image a').attr('href').split('/').pop();
+        tracks_full.push(track_id);
+
+        if ($(element).find('.chart-table-trend__icon circle').length !== 0) {
+            tracks_new.push(track_id);
+        }
     });
 
-    await redis_client.del(`chart:${chart_key}`);
+    const chart_code_full = `${region_code}-${type_code}-${chart_recurrence}`;
+    const chart_code_new = `${region_code}-${type_code}-${chart_recurrence}-new`;
+
+    // await redis_client.del(`chart:${chart_code_full}`);
+    // await redis_client.del(`chart:${chart_code_new}`);
+
     try {
-        await redis_client.rpush(`chart:${chart_key}`, tracks);
+        await redis_client.rpush(`chart:${chart_code_full}`, tracks_full);
         // set expire, 1 hour for daily charts, 12 hours for weekly charts
         if (chart_recurrence === 'daily') {
-            await redis_client.expire(`chart:${chart_key}`, 1 * 60 * 60);
+            await redis_client.expire(`chart:${chart_code_full}`, 1 * 60 * 60);
         }
-        else if (chart_recurrence === 'weekly')
-            await redis_client.expire(`chart:${chart_key}`, 12 * 60 * 60);
+        else if (chart_recurrence === 'weekly') {
+            await redis_client.expire(`chart:${chart_code_full}`, 12 * 60 * 60);
+        }
     } catch (e) {
-        winston_logger.info(`Empty chart for ${chart_key}`);
+        winston_logger.info(`Empty chart for ${chart_code_full}`);
     }
-    winston_logger.info(`Updated chart for ${chart_key}`);
-    return await redis_client.lrange(`chart:${chart_key}`, 0, -1);
+
+    try {
+        await redis_client.rpush(`chart:${chart_code_new}`, tracks_new);
+        // set expire, 1 hour for daily charts, 12 hours for weekly charts
+        if (chart_recurrence === 'daily') {
+            await redis_client.expire(`chart:${chart_code_new}`, 1 * 60 * 60);
+        }
+        else if (chart_recurrence === 'weekly') {
+            await redis_client.expire(`chart:${chart_code_new}`, 12 * 60 * 60);
+        }
+    } catch (e) {
+        winston_logger.info(`Empty chart for ${chart_code_new}`);
+    }
+
+    winston_logger.info(`Updated chart for ${chart_code_full} and ${chart_code_new}`);
+    return await redis_client.lrange(`chart:${chart_code}`, 0, -1);
 };
 
 module.exports.fetch_charts_metadata_periodic = fetch_charts_metadata_periodic;
 module.exports.fetch_chart = fetch_chart;
-module.exports.regions = (async () => (await redis_client.hgetall('regions')))();
-module.exports.chart_options = (async () => (await redis_client.hgetall('chart_options')))();

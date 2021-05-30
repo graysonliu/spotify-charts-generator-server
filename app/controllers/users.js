@@ -19,7 +19,7 @@ const get_user_info = async (ctx, next) => {
     ctx.body = {
         user_name: display_name,
         user_id: id,
-        registered_regions: await redis_client.hkeys(`playlists:${id}`)
+        registered_charts: await redis_client.hkeys(`playlists:${id}`)
     };
 };
 

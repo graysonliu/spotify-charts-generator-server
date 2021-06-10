@@ -103,9 +103,6 @@ const add_tracks_to_playlist = async (user_id, playlist_id, tracks) => {
 };
 
 const delete_track_from_playlist = async (user_id, playlist_id, tracks) => {
-    console.log({
-        tracks: tracks.slice(0, 100).map((uri) => ({ uri: `spotify:track:${uri}` }))
-    });
     // we can only delete 100 tracks per request
     for (let i = 0; i < tracks.length; i += 100) {
         await spotify_api.web_api(

@@ -74,7 +74,7 @@ const update_playlist_daily_new = async (user_id, playlist_id, chart_code) => {
     }
 
     await delete_track_from_playlist(user_id, playlist_id, [...tracks_to_delete]);
-    await add_tracks_to_playlist(user_id, playlist_id, tracks_to_add);
+    await add_tracks_to_playlist(user_id, playlist_id, tracks_to_add, 0);
 };
 
 const clear_playlist = async (user_id, playlist_id) => {
@@ -88,7 +88,7 @@ const clear_playlist = async (user_id, playlist_id) => {
     );
 };
 
-const add_tracks_to_playlist = async (user_id, playlist_id, tracks) => {
+const add_tracks_to_playlist = async (user_id, playlist_id, tracks, position) => {
     // we can only add 100 tracks per request
     for (let i = 0; i < tracks.length; i += 100) {
         await spotify_api.web_api(
@@ -96,7 +96,8 @@ const add_tracks_to_playlist = async (user_id, playlist_id, tracks) => {
             user_id,
             'POST', // POST method to add tracks
             {
-                uris: tracks.slice(i, i + 100).map((uri) => `spotify:track:${uri}`)
+                uris: tracks.slice(i, i + 100).map((uri) => `spotify:track:${uri}`),
+                ...(typeof position === 'number' && { position: position })
             }
         );
     }

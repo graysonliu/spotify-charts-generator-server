@@ -65,7 +65,7 @@ const update_playlist_daily_new = async (user_id, playlist_id, chart_code) => {
 
     const now = new Date();
 
-    for (const [added_time, track_id] of tracks_with_added_time) {
+    for (const [track_id, added_time] of tracks_with_added_time) {
         const added_time_date = new Date(added_time);
         // check tracks that were added more than 2.5 days ago
         if (now.getTime() - added_time_date.getTime() > 2.5 * 24 * 60 * 60 * 1000) {

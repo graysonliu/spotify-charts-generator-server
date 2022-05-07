@@ -84,27 +84,18 @@ const web_api = async (endpoint, user_id, method = 'GET', request_body) => {
     const spotify_api_uri = 'https://api.spotify.com/v1';
 
     const response =
-        method.toUpperCase() === 'GET' || method.toUpperCase() === 'DELETE' ?
-            await fetch(
-                spotify_api_uri + endpoint,
-                {
-                    method: method,
-                    headers: {
-                        Authorization: `Bearer ${access_token}`
-                    }
-                }
-            ) :
-            await fetch(
-                spotify_api_uri + endpoint,
-                {
-                    method: method,
-                    headers: {
-                        Authorization: `Bearer ${access_token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(request_body || '')
-                }
-            );
+        await fetch(
+            spotify_api_uri + endpoint,
+            {
+                method: method,
+                headers: {
+                    Authorization: `Bearer ${access_token}`,
+                    ...(request_body && { 'Content-Type': 'application/json' })
+                },
+                ...(request_body && { body: JSON.stringify(request_body || '') })
+            }
+        );
+
     winston_logger.info(`Spotify Web API: ${endpoint}, user: ${user_id}, method: ${method}, HTTP status: ${response.status}`);
 
     let body = null;

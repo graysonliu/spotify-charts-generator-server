@@ -13,7 +13,7 @@ const fetch_from_spotifycharts = async (path) => {
 
 const fetch_charts_metadata = async () => {
     try {
-        const response = await fetch_from_spotifycharts('/');
+        const response = await fetch_from_spotifycharts('/regional');
         if (!response.ok) {
             throw (`Failure when fetching metadata form spotifycharts.com, HTTP Code: ${response.status}`);
         }

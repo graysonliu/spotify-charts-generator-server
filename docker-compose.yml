@@ -17,6 +17,6 @@ services:
     image: zijianliu/redis:spotify-charts-generator-server
     build: ./redis
     volumes:
-      - ./redis/users.acl:/redis/users.acl
+      - ./redis/data:/redis/data
     ports:
       - 7777:7777

@@ -5,3 +5,9 @@ services:
     env_file:
       - ./env/app-docker-compose-prod.env
       - ./env/app-base.env
+  
+  redis:
+    image: zijianliu/redis:spotify-charts-generator-server
+    build: ./redis
+    volumes:
+      - ./redis/spotify.rdb:/redis/spotify.rdb

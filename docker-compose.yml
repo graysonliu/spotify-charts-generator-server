@@ -19,4 +19,4 @@ services:
     volumes:
       - ./redis/data:/redis/data
     ports:
-      - 7777:7777
+      - 6379:6379

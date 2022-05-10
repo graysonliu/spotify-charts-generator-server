@@ -37,10 +37,10 @@ const update_playlist = async (playlist_id, user_id, chart_code) => {
     );
 
     // special strategy for daily new chart playlists 
-    if (chart_code.includes('daily-new')) {
-        await update_playlist_daily_new(user_id, playlist_id, chart_code);
-        return;
-    }
+    // if (chart_code.includes('daily-new')) {
+    //     await update_playlist_daily_new(user_id, playlist_id, chart_code);
+    //     return;
+    // }
 
     // if (!response.ok) {
     //     // this playlist might has been deleted by the user
@@ -57,25 +57,25 @@ const update_playlist = async (playlist_id, user_id, chart_code) => {
     await add_tracks_to_playlist(user_id, playlist_id, tracks);
 };
 
-const update_playlist_daily_new = async (user_id, playlist_id, chart_code) => {
-    const tracks_to_add = await fetch_chart(chart_code);
-    const tracks_to_delete = new Set(tracks_to_add);
+// const update_playlist_daily_new = async (user_id, playlist_id, chart_code) => {
+//     const tracks_to_add = await fetch_chart(chart_code);
+//     const tracks_to_delete = new Set(tracks_to_add);
 
-    const tracks_with_added_time = await get_playlist(user_id, playlist_id);
+//     const tracks_with_added_time = await get_playlist(user_id, playlist_id);
 
-    const now = new Date();
+//     const now = new Date();
 
-    for (const [track_id, added_time] of tracks_with_added_time) {
-        const added_time_date = new Date(added_time);
-        // check tracks that were added more than 2.5 days ago
-        if (now.getTime() - added_time_date.getTime() > 2.5 * 24 * 60 * 60 * 1000) {
-            tracks_to_delete.add(track_id);
-        }
-    }
+//     for (const [track_id, added_time] of tracks_with_added_time) {
+//         const added_time_date = new Date(added_time);
+//         // check tracks that were added more than 2.5 days ago
+//         if (now.getTime() - added_time_date.getTime() > 2.5 * 24 * 60 * 60 * 1000) {
+//             tracks_to_delete.add(track_id);
+//         }
+//     }
 
-    await delete_track_from_playlist(user_id, playlist_id, [...tracks_to_delete]);
-    await add_tracks_to_playlist(user_id, playlist_id, tracks_to_add, 0);
-};
+//     await delete_track_from_playlist(user_id, playlist_id, [...tracks_to_delete]);
+//     await add_tracks_to_playlist(user_id, playlist_id, tracks_to_add, 0);
+// };
 
 const clear_playlist = async (user_id, playlist_id) => {
     await spotify_api.web_api(
@@ -103,19 +103,19 @@ const add_tracks_to_playlist = async (user_id, playlist_id, tracks, position) =>
     }
 };
 
-const delete_track_from_playlist = async (user_id, playlist_id, tracks) => {
-    // we can only delete 100 tracks per request
-    for (let i = 0; i < tracks.length; i += 100) {
-        await spotify_api.web_api(
-            `/playlists/${playlist_id}/tracks`,
-            user_id,
-            'DELETE', // POST method to delete tracks
-            {
-                tracks: tracks.slice(i, i + 100).map((uri) => ({ uri: `spotify:track:${uri}` }))
-            }
-        );
-    }
-};
+// const delete_track_from_playlist = async (user_id, playlist_id, tracks) => {
+//     // we can only delete 100 tracks per request
+//     for (let i = 0; i < tracks.length; i += 100) {
+//         await spotify_api.web_api(
+//             `/playlists/${playlist_id}/tracks`,
+//             user_id,
+//             'DELETE', // POST method to delete tracks
+//             {
+//                 tracks: tracks.slice(i, i + 100).map((uri) => ({ uri: `spotify:track:${uri}` }))
+//             }
+//         );
+//     }
+// };
 
 const create_playlist = async (user_id, chart_code) => {
     const regions = await redis_client.hgetall('regions');
@@ -140,29 +140,29 @@ const delete_playlist = async (user_id, playlist_id) => {
     return await spotify_api.web_api(`/playlists/${playlist_id}/followers`, user_id, 'DELETE');
 };
 
-const get_playlist = async (user_id, playlist_id) => {
-    // we only need added time (for retaining tracks in daily new playlists) and the track id here
-    const items = (await spotify_api.web_api(
-        `/playlists/${playlist_id}/tracks?fields=items(added_at,track.id)`,
-        user_id
-    ))['body']['items'];
+// const get_playlist = async (user_id, playlist_id) => {
+//     // we only need added time (for retaining tracks in daily new playlists) and the track id here
+//     const items = (await spotify_api.web_api(
+//         `/playlists/${playlist_id}/tracks?fields=items(added_at,track.id)`,
+//         user_id
+//     ))['body']['items'];
 
-    const tracks_with_added_time = [];
+//     const tracks_with_added_time = [];
 
-    try {
-        for (const item of items) {
-            const added_time = item['added_at'];
-            tracks_with_added_time.push([item['track']['id'], added_time]);
-        }
-    }
-    catch(error){
-        console.log(error)
-        console.log(user_id, playlist_id)
-        console.log(items)
-    }
-    
-    return tracks_with_added_time;
-};
+//     try {
+//         for (const item of items) {
+//             const added_time = item['added_at'];
+//             tracks_with_added_time.push([item['track']['id'], added_time]);
+//         }
+//     }
+//     catch(error){
+//         console.log(error)
+//         console.log(user_id, playlist_id)
+//         console.log(items)
+//     }
+
+//     return tracks_with_added_time;
+// };
 
 const register_charts = async (ctx, next) => {
     const regions = await redis_client.hgetall('regions');

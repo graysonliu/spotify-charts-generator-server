@@ -47,8 +47,8 @@ const fetch_charts_metadata = async () => {
                 chart_options.push(`${type_key}-${recurrence_key}`);
                 chart_options.push(`${type_text} ${recurrence_text}`);
                 // add new entry options
-                chart_options.push(`${type_key}-${recurrence_key}-new`);
-                chart_options.push(`${type_text} ${recurrence_text} NEW ENTRY`);
+                // chart_options.push(`${type_key}-${recurrence_key}-new`);
+                // chart_options.push(`${type_text} ${recurrence_text} NEW ENTRY`);
             }
         }
         await redis_client.del('chart_options');
@@ -93,7 +93,7 @@ const fetch_chart = async (chart_code) => {
     }
 
     const tracks_full = [];
-    const tracks_new = [];
+    // const tracks_new = [];
 
     const chart_page = await chart_res.text();
     const $ = cheerio.load(chart_page);
@@ -102,44 +102,44 @@ const fetch_chart = async (chart_code) => {
         const track_id = $(element).find('.chart-table-image a').attr('href').split('/').pop();
         tracks_full.push(track_id);
 
-        if ($(element).find('.chart-table-trend__icon circle').length !== 0) {
-            tracks_new.push(track_id);
-        }
+        // if ($(element).find('.chart-table-trend__icon circle').length !== 0) {
+        //     tracks_new.push(track_id);
+        // }
     });
 
-    const chart_code_full = `${region_code}-${type_code}-${chart_recurrence}`;
-    const chart_code_new = `${region_code}-${type_code}-${chart_recurrence}-new`;
+    // const chart_code = `${region_code}-${type_code}-${chart_recurrence}`;
+    // const chart_code_new = `${region_code}-${type_code}-${chart_recurrence}-new`;
 
     // await redis_client.del(`chart:${chart_code_full}`);
     // await redis_client.del(`chart:${chart_code_new}`);
 
     try {
-        await redis_client.rpush(`chart:${chart_code_full}`, tracks_full);
+        await redis_client.rpush(`chart:${chart_code}`, tracks_full);
         // set expire, 1 hour for daily charts, 12 hours for weekly charts
         if (chart_recurrence === 'daily') {
-            await redis_client.expire(`chart:${chart_code_full}`, 1 * 60 * 60);
+            await redis_client.expire(`chart:${chart_code}`, 1 * 60 * 60);
         }
         else if (chart_recurrence === 'weekly') {
-            await redis_client.expire(`chart:${chart_code_full}`, 12 * 60 * 60);
+            await redis_client.expire(`chart:${chart_code}`, 12 * 60 * 60);
         }
     } catch (e) {
-        winston_logger.info(`Empty chart for ${chart_code_full}`);
+        winston_logger.info(`Empty chart for ${chart_code}`);
     }
 
-    try {
-        await redis_client.rpush(`chart:${chart_code_new}`, tracks_new);
-        // set expire, 1 hour for daily charts, 12 hours for weekly charts
-        if (chart_recurrence === 'daily') {
-            await redis_client.expire(`chart:${chart_code_new}`, 1 * 60 * 60);
-        }
-        else if (chart_recurrence === 'weekly') {
-            await redis_client.expire(`chart:${chart_code_new}`, 12 * 60 * 60);
-        }
-    } catch (e) {
-        winston_logger.info(`Empty chart for ${chart_code_new}`);
-    }
+    // try {
+    //     await redis_client.rpush(`chart:${chart_code_new}`, tracks_new);
+    //     // set expire, 1 hour for daily charts, 12 hours for weekly charts
+    //     if (chart_recurrence === 'daily') {
+    //         await redis_client.expire(`chart:${chart_code_new}`, 1 * 60 * 60);
+    //     }
+    //     else if (chart_recurrence === 'weekly') {
+    //         await redis_client.expire(`chart:${chart_code_new}`, 12 * 60 * 60);
+    //     }
+    // } catch (e) {
+    //     winston_logger.info(`Empty chart for ${chart_code_new}`);
+    // }
 
-    winston_logger.info(`Updated chart for ${chart_code_full} and ${chart_code_new}`);
+    winston_logger.info(`Updated chart for ${chart_code}`);
     return await redis_client.lrange(`chart:${chart_code}`, 0, -1);
 };
 

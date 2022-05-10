@@ -149,11 +149,18 @@ const get_playlist = async (user_id, playlist_id) => {
 
     const tracks_with_added_time = [];
 
-    for (const item of items) {
-        const added_time = item['added_at'];
-        tracks_with_added_time.push([item['track']['id'], added_time]);
+    try {
+        for (const item of items) {
+            const added_time = item['added_at'];
+            tracks_with_added_time.push([item['track']['id'], added_time]);
+        }
     }
-
+    catch(error){
+        console.log(error)
+        console.log(user_id, playlist_id)
+        console.log(items)
+    }
+    
     return tracks_with_added_time;
 };
 

@@ -8,7 +8,7 @@ import redis
 project_dir = os.path.split(os.path.realpath(sys.argv[0]))[0]
 os.chdir(project_dir)
 
-load_dotenv('../env/redis.env')
+load_dotenv('../../env/redis.env')
 
 redis_client = redis.Redis(
     host='localhost',
